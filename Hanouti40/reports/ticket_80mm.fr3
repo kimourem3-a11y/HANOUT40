@@ -1,0 +1,30 @@
+; FastReport Template: Ticket 80mm - Hanouti 40
+; Type: Thermal Receipt POS (80mm)
+[Report]
+Version=4.0
+Title=Ticket de Vente
+PaperSize=Roll80
+Margins=2,2,2,2
+
+[Header]
+StoreName=[Store.Name]
+StoreAddress=[Store.Address]
+StorePhone=[Store.Phone]
+RC=[Store.RC]
+NIF=[Store.NIF]
+
+[Items]
+Columns=Designation,Qte,PrixU,Total
+FontSize=8
+FontName=Courier New
+
+[Totals]
+SubTotal=[Sale.SubTotal] DZD
+Discount=[Sale.Discount] DZD
+TotalTTC=[Sale.FinalTotal] DZD
+Paid=[Sale.PaidAmount] DZD
+Change=[Sale.ChangeAmount] DZD
+
+[Footer]
+Message=Merci pour votre visite !
+PoweredBy=Hanouti 40 Pro
