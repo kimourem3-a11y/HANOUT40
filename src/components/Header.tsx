@@ -1,7 +1,8 @@
-import React from 'react';
-import { Store, Globe, ShoppingCart, ShieldCheck, Smartphone, Tablet, FileDown, Crown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Store, Globe, ShoppingCart, ShieldCheck, Smartphone, Tablet, FileDown, Crown, Radio, RefreshCw, WifiOff } from 'lucide-react';
 import { DeviceViewMode, Language, LicenseInfo, StoreSettings } from '../types';
 import { translations } from '../localization/translations';
+import { SyncEngine, SyncConnectionStatus } from '../utils/syncEngine';
 
 interface HeaderProps {
   settings: StoreSettings;
@@ -13,6 +14,7 @@ interface HeaderProps {
   onOpenExportCenter: () => void;
   onOpenForensics: () => void;
   onOpenLicense?: () => void;
+  onOpenSync?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,10 +27,18 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenExportCenter,
   onOpenForensics,
   onOpenLicense,
+  onOpenSync,
 }) => {
   const t = translations[settings.language];
   const isRtl = settings.language === 'ar';
   const isPro = licenseInfo?.edition === 'PRO' && licenseInfo?.status === 'ACTIVE';
+
+  const [syncStatus, setSyncStatus] = useState<SyncConnectionStatus>(SyncEngine.getCurrentStatus());
+
+  useEffect(() => {
+    const unsub = SyncEngine.onStatusChange((st) => setSyncStatus(st));
+    return () => unsub();
+  }, []);
 
   return (
     <header
@@ -95,6 +105,37 @@ export const Header: React.FC<HeaderProps> = ({
               {settings.language === 'ar' ? 'الكاسة نشطة' : 'Caisse 01 Ouverte'}
             </span>
           </div>
+
+          {/* Real-time Sync Status Indicator */}
+          <button
+            id="header-sync-status-btn"
+            type="button"
+            onClick={onOpenSync}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border transition cursor-pointer font-medium ${
+              syncStatus === 'SYNCED'
+                ? 'bg-slate-800/90 text-emerald-300 border-emerald-500/40 hover:bg-slate-800'
+                : syncStatus === 'SYNCING'
+                ? 'bg-amber-950/40 text-amber-300 border-amber-500/40 hover:bg-amber-950/60'
+                : syncStatus === 'OFFLINE'
+                ? 'bg-rose-950/40 text-rose-300 border-rose-500/40 hover:bg-rose-950/60'
+                : 'bg-orange-950/40 text-orange-300 border-orange-500/40 hover:bg-orange-950/60'
+            }`}
+            title="État de la synchronisation en temps réel Android ↔ PC"
+          >
+            {syncStatus === 'SYNCED' && <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />}
+            {syncStatus === 'SYNCING' && <RefreshCw className="w-3.5 h-3.5 text-amber-400 animate-spin" />}
+            {syncStatus === 'OFFLINE' && <WifiOff className="w-3.5 h-3.5 text-rose-400" />}
+            {syncStatus === 'ERROR' && <Radio className="w-3.5 h-3.5 text-orange-400" />}
+            <span className="hidden lg:inline">
+              {syncStatus === 'SYNCED'
+                ? 'Sync: Connecté'
+                : syncStatus === 'SYNCING'
+                ? 'Sync: En cours...'
+                : syncStatus === 'OFFLINE'
+                ? 'Sync: Hors-ligne'
+                : 'Sync: Conflit'}
+            </span>
+          </button>
 
           {/* Quick POS button */}
           <button

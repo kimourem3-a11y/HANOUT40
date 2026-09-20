@@ -44,6 +44,7 @@ import { ResetSafetyModal } from './components/ResetSafetyModal';
 import { ReceiptModal } from './components/ReceiptModal';
 import { ProUpgradeModal } from './components/ProUpgradeModal';
 import { FeatureAccessManager, LicenseManager } from './utils/licenseManager';
+import { SyncEngine } from './utils/syncEngine';
 import { Wifi, BatteryMedium, Signal } from 'lucide-react';
 
 export default function App() {
@@ -113,7 +114,7 @@ export default function App() {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   // Settings initial tab
-  const [settingsTab, setSettingsTab] = useState<'general' | 'data' | 'license'>('general');
+  const [settingsTab, setSettingsTab] = useState<'general' | 'data' | 'sync' | 'license'>('general');
 
   // Current active navigation module
   const [currentModule, setCurrentModule] = useState<AppModule>('dashboard');
@@ -176,6 +177,85 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Real-Time Synchronization Listener (PC <-> Android)
+  useEffect(() => {
+    SyncEngine.init();
+
+    const unsub = SyncEngine.onRemoteSync((item) => {
+      if (item.entityType === 'PRODUCT') {
+        if (item.operation === 'DELETE') {
+          setProducts((prev) => prev.filter((p) => String(p.id) !== String(item.entityUuid)));
+        } else {
+          setProducts((prev) => {
+            const idx = prev.findIndex((p) => String(p.id) === String(item.entityUuid));
+            if (idx > -1) {
+              const copy = [...prev];
+              copy[idx] = item.payload;
+              return copy;
+            }
+            return [item.payload, ...prev];
+          });
+        }
+      } else if (item.entityType === 'SALE') {
+        if (item.operation === 'CREATE') {
+          setSales((prev) => {
+            if (prev.some((s) => String(s.id) === String(item.entityUuid))) return prev;
+            return [item.payload, ...prev];
+          });
+        }
+      } else if (item.entityType === 'CUSTOMER') {
+        if (item.operation === 'DELETE') {
+          setCustomers((prev) => prev.filter((c) => String(c.id) !== String(item.entityUuid)));
+        } else {
+          setCustomers((prev) => {
+            const idx = prev.findIndex((c) => String(c.id) === String(item.entityUuid));
+            if (idx > -1) {
+              const copy = [...prev];
+              copy[idx] = item.payload;
+              return copy;
+            }
+            return [item.payload, ...prev];
+          });
+        }
+      } else if (item.entityType === 'SUPPLIER') {
+        if (item.operation === 'DELETE') {
+          setSuppliers((prev) => prev.filter((s) => String(s.id) !== String(item.entityUuid)));
+        } else {
+          setSuppliers((prev) => {
+            const idx = prev.findIndex((s) => String(s.id) === String(item.entityUuid));
+            if (idx > -1) {
+              const copy = [...prev];
+              copy[idx] = item.payload;
+              return copy;
+            }
+            return [item.payload, ...prev];
+          });
+        }
+      } else if (item.entityType === 'PURCHASE') {
+        if (item.operation === 'CREATE') {
+          setPurchases((prev) => {
+            if (prev.some((p) => String(p.id) === String(item.entityUuid))) return prev;
+            return [item.payload, ...prev];
+          });
+        }
+      } else if (item.entityType === 'INCOME') {
+        if (item.operation === 'DELETE') {
+          setIncomes((prev) => prev.filter((i) => String(i.id) !== String(item.entityUuid)));
+        } else {
+          setIncomes((prev) => [item.payload, ...prev]);
+        }
+      } else if (item.entityType === 'EXPENSE') {
+        if (item.operation === 'DELETE') {
+          setExpenses((prev) => prev.filter((e) => String(e.id) !== String(item.entityUuid)));
+        } else {
+          setExpenses((prev) => [item.payload, ...prev]);
+        }
+      }
+    });
+
+    return () => unsub();
+  }, []);
+
   // Handlers
   const handleLanguageChange = (lang: Language) => {
     setSettings((prev) => ({ ...prev, language: lang }));
@@ -214,6 +294,15 @@ export default function App() {
     setProducts(updatedProducts);
     setCustomers(updatedCustomers);
     setViewingReceiptSale(newSale);
+
+    // Sync broadcast
+    SyncEngine.enqueueChange(
+      'SALE',
+      'CREATE',
+      String(newSale.id),
+      newSale,
+      `Vente #${newSale.invoiceNumber || newSale.id} enregistrée (${newSale.totalAmount} DZD)`
+    );
   };
 
   const handleSaveProduct = (prod: Product) => {
@@ -235,16 +324,43 @@ export default function App() {
       }
       return [prod, ...prev];
     });
+
+    // Sync broadcast
+    SyncEngine.enqueueChange(
+      'PRODUCT',
+      isExisting ? 'UPDATE' : 'CREATE',
+      String(prod.id),
+      prod,
+      `Produit : ${prod.name} (${prod.sellingPrice} DZD)`
+    );
   };
 
   const handleDeleteProduct = (productId: number) => {
     setProducts((prev) => prev.filter((p) => p.id !== productId));
+    SyncEngine.enqueueChange(
+      'PRODUCT',
+      'DELETE',
+      String(productId),
+      { id: productId },
+      `Produit #${productId} supprimé`
+    );
   };
 
   const handleQuickAddStock = (productId: number, addQty: number) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, stockQuantity: p.stockQuantity + addQty } : p))
-    );
+    setProducts((prev) => {
+      const updated = prev.map((p) => (p.id === productId ? { ...p, stockQuantity: p.stockQuantity + addQty } : p));
+      const target = updated.find((p) => p.id === productId);
+      if (target) {
+        SyncEngine.enqueueChange(
+          'PRODUCT',
+          'UPDATE',
+          String(productId),
+          target,
+          `Stock réapprovisionné : ${target.name} (+${addQty})`
+        );
+      }
+      return updated;
+    });
   };
 
   const handleSaveCustomer = (cust: Customer) => {
@@ -266,16 +382,36 @@ export default function App() {
       }
       return [cust, ...prev];
     });
+
+    SyncEngine.enqueueChange(
+      'CUSTOMER',
+      isExisting ? 'UPDATE' : 'CREATE',
+      String(cust.id),
+      cust,
+      `Client : ${cust.name}`
+    );
   };
 
   const handleDeleteCustomer = (id: number) => {
     setCustomers((prev) => prev.filter((c) => c.id !== id));
+    SyncEngine.enqueueChange('CUSTOMER', 'DELETE', String(id), { id }, `Client #${id} supprimé`);
   };
 
   const handleReceiveCustomerPayment = (customerId: number, amount: number) => {
-    setCustomers((prev) =>
-      prev.map((c) => (c.id === customerId ? { ...c, currentDebt: Math.max(0, c.currentDebt - amount) } : c))
-    );
+    setCustomers((prev) => {
+      const updated = prev.map((c) => (c.id === customerId ? { ...c, currentDebt: Math.max(0, c.currentDebt - amount) } : c));
+      const target = updated.find((c) => c.id === customerId);
+      if (target) {
+        SyncEngine.enqueueChange(
+          'CUSTOMER',
+          'UPDATE',
+          String(customerId),
+          target,
+          `Versement dette client : ${target.name} (-${amount} DZD)`
+        );
+      }
+      return updated;
+    });
   };
 
   const handleSaveSupplier = (supp: Supplier) => {
@@ -297,16 +433,36 @@ export default function App() {
       }
       return [supp, ...prev];
     });
+
+    SyncEngine.enqueueChange(
+      'SUPPLIER',
+      isExisting ? 'UPDATE' : 'CREATE',
+      String(supp.id),
+      supp,
+      `Fournisseur : ${supp.name}`
+    );
   };
 
   const handleDeleteSupplier = (id: number) => {
     setSuppliers((prev) => prev.filter((s) => s.id !== id));
+    SyncEngine.enqueueChange('SUPPLIER', 'DELETE', String(id), { id }, `Fournisseur #${id} supprimé`);
   };
 
   const handlePaySupplier = (supplierId: number, amount: number) => {
-    setSuppliers((prev) =>
-      prev.map((s) => (s.id === supplierId ? { ...s, currentDebt: Math.max(0, s.currentDebt - amount) } : s))
-    );
+    setSuppliers((prev) => {
+      const updated = prev.map((s) => (s.id === supplierId ? { ...s, currentDebt: Math.max(0, s.currentDebt - amount) } : s));
+      const target = updated.find((s) => s.id === supplierId);
+      if (target) {
+        SyncEngine.enqueueChange(
+          'SUPPLIER',
+          'UPDATE',
+          String(supplierId),
+          target,
+          `Paiement dette fournisseur : ${target.name} (-${amount} DZD)`
+        );
+      }
+      return updated;
+    });
   };
 
   const handleRecordPurchase = (
@@ -323,29 +479,52 @@ export default function App() {
     setPurchases((prev) => [pur, ...prev]);
     setProducts(updatedProducts);
     setSuppliers(updatedSuppliers);
+
+    SyncEngine.enqueueChange(
+      'PURCHASE',
+      'CREATE',
+      String(pur.id),
+      pur,
+      `Achat fournisseur #${pur.billNumber || pur.id} (${pur.totalAmount} DZD)`
+    );
   };
 
   const handleAdjustStock = (productId: number, newStock: number) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, stockQuantity: newStock } : p))
-    );
+    setProducts((prev) => {
+      const updated = prev.map((p) => (p.id === productId ? { ...p, stockQuantity: newStock } : p));
+      const target = updated.find((p) => p.id === productId);
+      if (target) {
+        SyncEngine.enqueueChange(
+          'PRODUCT',
+          'UPDATE',
+          String(productId),
+          target,
+          `Ajustement inventaire : ${target.name} -> ${newStock}`
+        );
+      }
+      return updated;
+    });
   };
 
   // Income and Expense Handlers
   const handleAddIncome = (income: Income) => {
     setIncomes((prev) => [income, ...prev]);
+    SyncEngine.enqueueChange('INCOME', 'CREATE', String(income.id), income, `Entrée : ${income.description} (${income.amount} DZD)`);
   };
 
   const handleDeleteIncome = (id: number) => {
     setIncomes((prev) => prev.filter((i) => i.id !== id));
+    SyncEngine.enqueueChange('INCOME', 'DELETE', String(id), { id }, `Entrée #${id} supprimée`);
   };
 
   const handleAddExpense = (expense: Expense) => {
     setExpenses((prev) => [expense, ...prev]);
+    SyncEngine.enqueueChange('EXPENSE', 'CREATE', String(expense.id), expense, `Dépense : ${expense.description} (${expense.amount} DZD)`);
   };
 
   const handleDeleteExpense = (id: number) => {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
+    SyncEngine.enqueueChange('EXPENSE', 'DELETE', String(id), { id }, `Dépense #${id} supprimée`);
   };
 
   const handleExportData = (): boolean => {
@@ -448,7 +627,10 @@ export default function App() {
     setIncomes([]);
     setExpenses([]);
 
-    // 3. Keep settings and license intact!
+    // 3. Inform sync engine to advance generation so stale sync operations are purged
+    SyncEngine.notifyResetEverything();
+
+    // 4. Keep settings and license intact!
   };
 
   const lowStockCount = products.filter((p) => p.stockQuantity <= p.minStock).length;
@@ -471,6 +653,10 @@ export default function App() {
         onOpenForensics={() => setCurrentModule('forensics')}
         onOpenLicense={() => {
           setSettingsTab('license');
+          setCurrentModule('settings');
+        }}
+        onOpenSync={() => {
+          setSettingsTab('sync');
           setCurrentModule('settings');
         }}
       />

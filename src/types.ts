@@ -208,7 +208,15 @@ export type AppModule =
 
 // License & Edition Types (FREE vs PRO)
 export type LicenseEdition = 'FREE' | 'PRO';
-export type LicenseStatus = 'NOT_ACTIVATED' | 'ACTIVE' | 'EXPIRED' | 'INVALID' | 'REVOKED';
+export type LicenseStatus =
+  | 'NOT_ACTIVATED'
+  | 'ACTIVE'
+  | 'AVAILABLE'
+  | 'EXPIRED'
+  | 'INVALID'
+  | 'REVOKED'
+  | 'SUSPENDED'
+  | 'ACTIVATION_LIMIT_REACHED';
 
 export interface LicenseInfo {
   licenseId: string;

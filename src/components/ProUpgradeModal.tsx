@@ -7,10 +7,11 @@ import {
   X,
   ArrowRight,
   ShieldCheck,
-  Zap,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { LicenseInfo } from '../types';
-import { LicenseManager, TEST_PRO_LICENSES } from '../utils/licenseManager';
+import { LicenseManager } from '../utils/licenseManager';
 
 interface ProUpgradeModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
 }) => {
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [licenseKeyInput, setLicenseKeyInput] = useState('');
+  const [showKeyText, setShowKeyText] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -41,7 +43,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    const result = LicenseManager.activateLicenseKey(licenseKeyInput);
+    const result = LicenseManager.activateLicenseKey(licenseKeyInput.trim());
     if (result.success && result.license) {
       setSuccessMsg(result.message);
       if (onLicenseActivated) {
@@ -53,25 +55,6 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
         setLicenseKeyInput('');
         setSuccessMsg(null);
       }, 1500);
-    } else {
-      setErrorMsg(result.message);
-    }
-  };
-
-  const handleUseQuickDevKey = (testKey: string) => {
-    setLicenseKeyInput(testKey);
-    const result = LicenseManager.activateLicenseKey(testKey);
-    if (result.success && result.license) {
-      setSuccessMsg(result.message);
-      if (onLicenseActivated) {
-        onLicenseActivated(result.license);
-      }
-      setTimeout(() => {
-        onClose();
-        setShowKeyInput(false);
-        setLicenseKeyInput('');
-        setSuccessMsg(null);
-      }, 1200);
     } else {
       setErrorMsg(result.message);
     }
@@ -156,57 +139,47 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
             </div>
           </div>
 
-          {/* License Activation Form or Quick Dev Trigger */}
+          {/* License Activation Form */}
           {showKeyInput ? (
             <form onSubmit={handleActivate} className="space-y-3 pt-2 border-t border-slate-800">
               <label className="text-xs font-semibold text-slate-300 block">
-                Saisir votre Clé de Licence PRO (Format: H40-PRO-XXXX) :
+                Entrez votre clé de licence PRO :
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={licenseKeyInput}
-                  onChange={(e) => setLicenseKeyInput(e.target.value)}
-                  placeholder="H40-PRO-0001"
-                  className="flex-1 bg-slate-950 border border-slate-700 focus:border-amber-400 text-white font-mono px-3 py-2 rounded-lg text-xs uppercase focus:outline-none"
-                  autoFocus
-                />
+              <div className="relative flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type={showKeyText ? 'text' : 'password'}
+                    value={licenseKeyInput}
+                    onChange={(e) => setLicenseKeyInput(e.target.value)}
+                    placeholder="H40-PRO-XXXX-XXXX-XXXX"
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 text-white font-mono px-3 py-2.5 pr-10 rounded-lg text-xs uppercase focus:outline-none tracking-wider"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyText(!showKeyText)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1 cursor-pointer"
+                    title={showKeyText ? 'Masquer la clé' : 'Afficher la clé'}
+                  >
+                    {showKeyText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
                 <button
                   type="submit"
-                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5"
+                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shrink-0 shadow-sm"
                 >
                   <ShieldCheck className="w-4 h-4" />
                   <span>Activer</span>
                 </button>
               </div>
 
-              {/* Dev quick test key helper */}
-              <div className="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
-                <span className="text-[11px] text-slate-400 font-semibold block mb-1.5 flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-amber-400" />
-                  Clés de test développement (Section 5) :
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {TEST_PRO_LICENSES.slice(0, 5).map((tk) => (
-                    <button
-                      key={tk}
-                      type="button"
-                      onClick={() => handleUseQuickDevKey(tk)}
-                      className="text-[10px] font-mono bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 px-2 py-0.5 rounded border border-slate-700 transition cursor-pointer"
-                    >
-                      {tk}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {errorMsg && (
-                <p className="text-xs text-rose-400 font-semibold bg-rose-950/40 p-2 rounded border border-rose-800/40">
+                <p className="text-xs text-rose-400 font-semibold bg-rose-950/40 p-2.5 rounded-lg border border-rose-800/40">
                   {errorMsg}
                 </p>
               )}
               {successMsg && (
-                <p className="text-xs text-emerald-400 font-semibold bg-emerald-950/40 p-2 rounded border border-emerald-800/40 flex items-center gap-1.5">
+                <p className="text-xs text-emerald-400 font-semibold bg-emerald-950/40 p-2.5 rounded-lg border border-emerald-800/40 flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{successMsg}</span>
                 </p>
