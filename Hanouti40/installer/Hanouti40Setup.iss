@@ -42,15 +42,21 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 [Files]
 Source: "..\bin\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\bin\sqlite3.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\Hanouti40-Windows\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\Hanouti40-Windows\*.pak"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\Hanouti40-Windows\*.dat"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\Hanouti40-Windows\*.bin"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\Hanouti40-Windows\locales\*"; DestDir: "{app}\locales"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\..\Hanouti40-Windows\resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\database\schema.sql"; DestDir: "{app}\database"; Flags: ignoreversion
-Source: "..\reports\*"; DestDir: "{app}\reports"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\bin\*.dll"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\bin\*.pak"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\bin\*.dat"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\bin\*.bin"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\bin\locales\*"; DestDir: "{app}\locales"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\bin\resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\..\Hanouti40-Windows\*.dll"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\..\Hanouti40-Windows\*.pak"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\..\Hanouti40-Windows\*.dat"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\..\Hanouti40-Windows\*.bin"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\..\Hanouti40-Windows\locales\*"; DestDir: "{app}\locales"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\..\Hanouti40-Windows\resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\database\schema.sql"; DestDir: "{app}\database"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\reports\*"; DestDir: "{app}\reports"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 
 [Dirs]
 Name: "{commonappdata}\{#MyAppName}"

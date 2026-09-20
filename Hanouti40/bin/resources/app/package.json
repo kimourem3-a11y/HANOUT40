@@ -1,0 +1,8 @@
+{
+  "name": "hanouti40",
+  "productName": "Hanouti 40",
+  "version": "1.0.0",
+  "description": "Hanouti 40 — Gestion de magasin POS, Stock, Dettes",
+  "main": "main.js",
+  "author": "Hanouti Soft"
+}

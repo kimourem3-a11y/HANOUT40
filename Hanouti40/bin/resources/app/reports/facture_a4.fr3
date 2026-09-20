@@ -1,0 +1,24 @@
+; FastReport Template: Facture A4 - Hanouti 40
+; Type: Standard Invoice (A4)
+[Report]
+Version=4.0
+Title=Facture Commerciale
+PaperSize=A4
+Orientation=Portrait
+
+[Header]
+Company=[Company.Name]
+FiscalId=[Company.NIF] / [Company.NIS] / [Company.RC] / [Company.AI]
+Client=[Client.Name]
+ClientAddress=[Client.Address]
+ClientNIF=[Client.NIF]
+
+[Table]
+Columns=Ref,Designation,Unite,Qte,PrixUnitaireHT,TotalHT
+Border=ThinSolid
+
+[Summary]
+TotalHT=[Sale.TotalHT]
+TVA=[Sale.TotalTVA]
+TotalTTC=[Sale.TotalTTC]
+TotalLetter=[Sale.TotalInLetters]
