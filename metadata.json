@@ -1,0 +1,6 @@
+{
+  "name": "Hanouti 40",
+  "description": "Gestion de magasin - Point of Sale, Inventory, Debts & Retail Management System",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
