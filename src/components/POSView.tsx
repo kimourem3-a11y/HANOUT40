@@ -46,6 +46,7 @@ export const POSView: React.FC<POSViewProps> = ({
   // Cart State
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
+  const [tvaRate, setTvaRate] = useState<number>(settings.taxRate ?? 0);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
 
   // Checkout Modal State
@@ -87,7 +88,9 @@ export const POSView: React.FC<POSViewProps> = ({
 
   // Cart Calculations
   const subtotal = cart.reduce((sum, item) => sum + item.lineTotal, 0);
-  const totalPayable = Math.max(0, subtotal - discount);
+  const discountedSubtotal = Math.max(0, subtotal - discount);
+  const taxAmount = (discountedSubtotal * tvaRate) / 100;
+  const totalPayable = discountedSubtotal + taxAmount;
 
   // Open Checkout
   const openCheckout = () => {
@@ -236,7 +239,7 @@ export const POSView: React.FC<POSViewProps> = ({
       customerName: selectedCustomer ? selectedCustomer.name : t.anonymousClient,
       subtotal,
       discount,
-      taxAmount: 0,
+      taxAmount: Math.round(taxAmount * 100) / 100,
       totalAmount: totalPayable,
       amountPaid: actualPaid,
       debtAmount,
@@ -519,6 +522,25 @@ export const POSView: React.FC<POSViewProps> = ({
                   placeholder="0.00"
                   className="w-full bg-slate-950 border border-slate-700 text-white px-2 py-1 rounded text-right font-mono text-xs focus:outline-none focus:border-amber-500"
                 />
+              </div>
+            </div>
+
+            {/* TVA Tax line */}
+            <div className="flex items-center justify-between text-xs text-slate-400">
+              <span>{t.tax} (TVA):</span>
+              <div className="flex items-center gap-2">
+                <select
+                  value={tvaRate}
+                  onChange={(e) => setTvaRate(Number(e.target.value))}
+                  className="bg-slate-950 border border-slate-700 text-white px-2 py-0.5 rounded text-[11px] font-mono focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="0">0%</option>
+                  <option value="9">9%</option>
+                  <option value="19">19%</option>
+                </select>
+                <span className="font-mono text-slate-300 w-16 text-right">
+                  {formatCurrency(taxAmount, settings.currency)}
+                </span>
               </div>
             </div>
 

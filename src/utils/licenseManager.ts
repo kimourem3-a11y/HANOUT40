@@ -41,15 +41,10 @@ export const DEFAULT_FREE_LICENSE: LicenseInfo = {
   licenseType: 'Version Gratuite / Free Starter',
 };
 
-// Case-insensitive letter validation for reset password 'karim40'
+// Case-insensitive letter validation for reset password 'karim40' (karim40, KARIM40, Karim40, kArIm40)
 export function isValidResetPassword(input: string): boolean {
   if (!input) return false;
-  // Strict rule: No leading/trailing spaces or accidental extra characters
-  // Must be exactly 7 characters: 5 letters case-insensitive 'karim' + exact digits '40'
-  if (input.length !== 7) return false;
-  const letters = input.slice(0, 5).toLowerCase();
-  const digits = input.slice(5);
-  return letters === 'karim' && digits === '40';
+  return input.trim().toLowerCase() === 'karim40';
 }
 
 /**

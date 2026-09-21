@@ -8,10 +8,16 @@ import {
   AlertTriangle,
   ArrowUpDown,
   PlusCircle,
+  Camera,
+  QrCode,
+  X,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { Category, Product, StoreSettings, Supplier } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { translations } from '../localization/translations';
+import { CameraScannerModal } from './CameraScannerModal';
 
 interface ProductsViewProps {
   products: Product[];
@@ -36,6 +42,14 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
   const [search, setSearch] = useState('');
   const [selectedCat, setSelectedCat] = useState<number | null>(null);
 
+  // Camera Scanner State
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState<'search' | 'form'>('search');
+
+  // QR / Barcode Card Modal
+  const [qrProduct, setQrProduct] = useState<Product | null>(null);
+  const [copiedBarcode, setCopiedBarcode] = useState(false);
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -55,6 +69,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
   const [minStock, setMinStock] = useState<number>(5);
   const [unit, setUnit] = useState<string>('Unité');
   const [supplierId, setSupplierId] = useState<number | undefined>(undefined);
+  const [tvaRate, setTvaRate] = useState<number>(0);
 
   const openAddModal = () => {
     setEditingProduct(null);
@@ -68,6 +83,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
     setMinStock(5);
     setUnit('Unité');
     setSupplierId(suppliers[0]?.id);
+    setTvaRate(0);
     setIsModalOpen(true);
   };
 
@@ -83,7 +99,27 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
     setMinStock(p.minStock);
     setUnit(p.unit);
     setSupplierId(p.supplierId);
+    setTvaRate(p.tvaRate || 0);
     setIsModalOpen(true);
+  };
+
+  const handleScanBarcode = (code: string) => {
+    const cleanCode = code.trim();
+    if (!cleanCode) return;
+    if (cameraTarget === 'form') {
+      setBarcode(cleanCode);
+    } else {
+      setSearch(cleanCode);
+    }
+    setIsCameraOpen(false);
+  };
+
+  const handleCopyBarcode = (text: string) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    setCopiedBarcode(true);
+    setTimeout(() => setCopiedBarcode(false), 2000);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -102,6 +138,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
       minStock: Number(minStock),
       unit,
       supplierId: supplierId ? Number(supplierId) : undefined,
+      tvaRate: Number(tvaRate),
     };
 
     onSaveProduct(prod);
@@ -156,15 +193,26 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
 
       {/* Filters bar */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow-sm flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+        <div className="relative flex-1 flex items-center">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t.productSearchPlaceholder}
-            className="w-full bg-slate-950 border border-slate-800 text-white pl-9 pr-3 py-2 rounded-lg text-xs focus:outline-none focus:border-emerald-500"
+            className="w-full bg-slate-950 border border-slate-800 text-white pl-9 pr-10 py-2 rounded-lg text-xs focus:outline-none focus:border-emerald-500"
           />
+          <button
+            type="button"
+            onClick={() => {
+              setCameraTarget('search');
+              setIsCameraOpen(true);
+            }}
+            className="absolute right-2 p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-emerald-400 transition cursor-pointer"
+            title="Scanner code-barres avec caméra"
+          >
+            <Camera className="w-4 h-4" />
+          </button>
         </div>
 
         <select
@@ -206,7 +254,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
 
                 return (
                   <tr key={prod.id} className="hover:bg-slate-800/40 transition">
-                    <td className="py-3 px-4 font-mono font-medium text-slate-300">
+                    <td className="py-3 px-4 font-mono font-medium text-slate-300" dir="ltr">
                       {prod.barcode}
                     </td>
                     <td className="py-3 px-4">
@@ -219,13 +267,13 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                         <div className="text-[11px] text-slate-400">{prod.nameAr}</div>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right text-slate-400 font-mono">
+                    <td className="py-3 px-4 text-right text-slate-400 font-mono" dir="ltr">
                       {formatCurrency(prod.purchasePrice, settings.currency)}
                     </td>
-                    <td className="py-3 px-4 text-right font-black text-emerald-400 font-mono">
+                    <td className="py-3 px-4 text-right font-black text-emerald-400 font-mono" dir="ltr">
                       {formatCurrency(prod.sellingPrice, settings.currency)}
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right" dir="ltr">
                       <span className="text-slate-300 font-bold font-mono">
                         {margin.toFixed(1)}%
                       </span>
@@ -243,6 +291,13 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => setQrProduct(prod)}
+                          className="p-1.5 rounded-md hover:bg-slate-800 text-sky-400 hover:text-sky-300 transition cursor-pointer"
+                          title="Voir QR Code & Code-barres"
+                        >
+                          <QrCode className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           onClick={() => setRefillProductId(prod.id)}
                           className="p-1.5 rounded-md hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 transition cursor-pointer"
@@ -290,13 +345,27 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                   <label className="text-xs text-slate-400 font-semibold block mb-1">
                     {t.barcode} *
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={barcode}
-                    onChange={(e) => setBarcode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-500"
-                  />
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      required
+                      value={barcode}
+                      onChange={(e) => setBarcode(e.target.value)}
+                      className="flex-1 bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-500"
+                      dir="ltr"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCameraTarget('form');
+                        setIsCameraOpen(true);
+                      }}
+                      className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 transition cursor-pointer"
+                      title="Scanner avec la caméra"
+                    >
+                      <Camera className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -313,6 +382,41 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                         {settings.language === 'ar' && c.nameAr ? c.nameAr : c.name}
                       </option>
                     ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-slate-400 font-semibold block mb-1">
+                    Fournisseur
+                  </label>
+                  <select
+                    value={supplierId ?? ''}
+                    onChange={(e) => setSupplierId(e.target.value ? Number(e.target.value) : undefined)}
+                    className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-xs focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="">Aucun fournisseur</option>
+                    {suppliers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.phone})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs text-slate-400 font-semibold block mb-1">
+                    TVA (%)
+                  </label>
+                  <select
+                    value={tvaRate}
+                    onChange={(e) => setTvaRate(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="0">0% (Exonéré)</option>
+                    <option value="9">9% (Taux réduit)</option>
+                    <option value="19">19% (Taux standard)</option>
                   </select>
                 </div>
               </div>
@@ -356,6 +460,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                     value={purchasePrice}
                     onChange={(e) => setPurchasePrice(Number(e.target.value))}
                     className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-500"
+                    dir="ltr"
                   />
                 </div>
                 <div>
@@ -369,6 +474,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                     value={sellingPrice}
                     onChange={(e) => setSellingPrice(Number(e.target.value))}
                     className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-500"
+                    dir="ltr"
                   />
                 </div>
               </div>
@@ -383,6 +489,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                     value={stockQuantity}
                     onChange={(e) => setStockQuantity(Number(e.target.value))}
                     className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-500"
+                    dir="ltr"
                   />
                 </div>
                 <div>
@@ -394,6 +501,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                     value={minStock}
                     onChange={(e) => setMinStock(Number(e.target.value))}
                     className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-500"
+                    dir="ltr"
                   />
                 </div>
                 <div>
@@ -449,6 +557,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                   value={refillQuantity}
                   onChange={(e) => setRefillQuantity(Number(e.target.value))}
                   className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-base font-bold font-mono focus:outline-none focus:border-emerald-500"
+                  dir="ltr"
                 />
               </div>
               <div className="flex items-center justify-end gap-2.5 pt-2">
@@ -470,6 +579,79 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* QR Code & Barcode Card Modal */}
+      {qrProduct && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+              <span className="text-xs font-bold text-slate-400">Étiquette Produit</span>
+              <button
+                onClick={() => setQrProduct(null)}
+                className="p-1 rounded-md text-slate-400 hover:text-white transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <h4 className="text-base font-bold text-white">
+                {settings.language === 'ar' && qrProduct.nameAr ? qrProduct.nameAr : qrProduct.name}
+              </h4>
+              <p className="text-lg font-black text-emerald-400 font-mono" dir="ltr">
+                {formatCurrency(qrProduct.sellingPrice, settings.currency)}
+              </p>
+            </div>
+
+            {/* Visual Simulated Barcode Strip */}
+            <div className="bg-white p-4 rounded-xl space-y-2 inline-block mx-auto shadow-inner">
+              <div className="flex justify-center items-end h-16 gap-[2px] px-2">
+                {Array.from(qrProduct.barcode).map((char, i) => {
+                  const num = parseInt(char, 10) || (i % 5) + 1;
+                  const width = (num % 3) + 1;
+                  const height = 40 + (num * 3);
+                  return (
+                    <div
+                      key={i}
+                      className="bg-black"
+                      style={{
+                        width: `${width * 2}px`,
+                        height: `${Math.min(60, height)}px`,
+                      }}
+                    />
+                  );
+                })}
+              </div>
+              <p className="font-mono text-xs font-bold text-slate-900 tracking-widest" dir="ltr">
+                {qrProduct.barcode}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <button
+                onClick={() => handleCopyBarcode(qrProduct.barcode)}
+                className="flex-1 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+              >
+                {copiedBarcode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedBarcode ? 'Copié !' : 'Copier'}</span>
+              </button>
+              <button
+                onClick={() => setQrProduct(null)}
+                className="py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition"
+              >
+                {t.close}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Camera Barcode & QR Code Scanner Modal */}
+      <CameraScannerModal
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onScan={handleScanBarcode}
+      />
     </div>
   );
 };

@@ -23,6 +23,7 @@ export interface Product {
   unit: string;
   supplierId?: number;
   sku?: string;
+  tvaRate?: number;
 }
 
 export interface Customer {

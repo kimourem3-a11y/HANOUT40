@@ -202,37 +202,40 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center bg-slate-800 rounded-md border border-slate-700 p-0.5">
             <Globe className="w-3.5 h-3.5 text-slate-400 mx-1.5" />
             <button
-              id="lang-ar-btn"
-              onClick={() => onLanguageChange('ar')}
-              className={`px-2 py-1 rounded text-xs font-semibold transition ${
-                settings.language === 'ar'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              العربية
-            </button>
-            <button
               id="lang-fr-btn"
               onClick={() => onLanguageChange('fr')}
-              className={`px-2 py-1 rounded text-xs font-semibold transition ${
+              className={`px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
                 settings.language === 'fr'
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-slate-400 hover:text-white'
               }`}
+              title="Français"
             >
-              FR
+              Français
+            </button>
+            <button
+              id="lang-ar-btn"
+              onClick={() => onLanguageChange('ar')}
+              className={`px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
+                settings.language === 'ar'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="العربية"
+            >
+              العربية
             </button>
             <button
               id="lang-en-btn"
               onClick={() => onLanguageChange('en')}
-              className={`px-2 py-1 rounded text-xs font-semibold transition ${
+              className={`px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
                 settings.language === 'en'
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-slate-400 hover:text-white'
               }`}
+              title="English"
             >
-              EN
+              English
             </button>
           </div>
         </div>
