@@ -81,7 +81,7 @@ export const NotificationCenterDrawer: React.FC<NotificationCenterDrawerProps> =
         onClick={onClose}
       />
 
-      <div className="absolute inset-y-0 right-0 max-w-md w-full flex pl-10">
+      <div className="absolute inset-y-0 right-0 max-w-md w-full flex pl-0 sm:pl-10">
         <div className="w-full bg-slate-900 border-l border-slate-800 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
           {/* Header */}
           <div className="p-4 border-b border-slate-800 bg-slate-900/95 sticky top-0 z-10">

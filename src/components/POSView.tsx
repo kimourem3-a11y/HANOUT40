@@ -361,7 +361,7 @@ export const POSView: React.FC<POSViewProps> = ({
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 overflow-y-auto max-h-[520px] p-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-1">
           {filteredProducts.map((product) => (
             <div
               key={product.id}
@@ -452,7 +452,7 @@ export const POSView: React.FC<POSViewProps> = ({
             </div>
 
             {/* Cart Line Items Table */}
-            <div className="overflow-y-auto max-h-72 divide-y divide-slate-800 mt-2">
+            <div className="overflow-y-auto max-h-96 divide-y divide-slate-800 mt-2">
               {cart.length === 0 ? (
                 <div className="py-12 text-center text-slate-500 text-xs flex flex-col items-center gap-2">
                   <ShoppingBag className="w-8 h-8 opacity-30" />
@@ -576,8 +576,8 @@ export const POSView: React.FC<POSViewProps> = ({
 
       {/* Checkout Modal */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-white pb-2 border-b border-slate-800">
               {t.checkout} — {formatCurrency(totalPayable, settings.currency)}
             </h3>

@@ -333,8 +333,8 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
 
       {/* Add/Edit Product Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-white pb-2 border-b border-slate-800">
               {editingProduct ? t.edit : t.quickNewProduct}
             </h3>
@@ -540,8 +540,8 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
 
       {/* Quick Stock Refill Modal */}
       {refillProductId && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 max-w-sm w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 max-w-sm w-full shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-white pb-2 border-b border-slate-800">
               Réapprovisionnement Rapide
             </h3>
@@ -582,8 +582,8 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
 
       {/* QR Code & Barcode Card Modal */}
       {qrProduct && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center my-auto max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center pb-2 border-b border-slate-800">
               <span className="text-xs font-bold text-slate-400">Étiquette Produit</span>
               <button

@@ -910,8 +910,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 
       {/* MODAL 1: ADD / EDIT CLIENT */}
       {isFormOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-white pb-2 border-b border-slate-800">
               {editingCustomer ? 'Modifier Fiche Client' : 'Ajouter un Nouveau Client'}
             </h3>
@@ -1081,8 +1081,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 
       {/* MODAL 2: RECEIVE PAYMENT */}
       {payingCustomer && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-white pb-2 border-b border-slate-800">
               Encaisser un Versement — {payingCustomer.name}
             </h3>
@@ -1161,8 +1161,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 
       {/* MODAL 3: RECORD RETURN / REFUND */}
       {returningCustomer && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-white pb-2 border-b border-slate-800">
               Retour Marchandise & Avoir — {returningCustomer.name}
             </h3>
@@ -1231,8 +1231,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 
       {/* MODAL 4: PROTECTED REMOVE CLIENT (karim40 CASE-INSENSITIVE + SOFT-DELETE SAFEGUARD) */}
       {removingCustomer && removingStats && (
-        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-rose-800/80 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-rose-800/80 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <div className="flex items-center gap-2.5 pb-2 border-b border-slate-800 text-rose-400">
               <ShieldAlert className="w-5 h-5" />
               <h3 className="text-base font-black text-white">

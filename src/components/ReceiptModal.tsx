@@ -26,9 +26,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   return (
     <div
       id="receipt-modal-overlay"
-      className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
+      className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-200"
     >
-      <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col my-auto max-h-[90vh]">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 bg-slate-850">
           <div className="flex items-center gap-2 text-emerald-400">

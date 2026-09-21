@@ -262,7 +262,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
           </div>
 
-          <div className="divide-y divide-slate-800/80 mt-2 overflow-y-auto max-h-80">
+          <div className="divide-y divide-slate-800/80 mt-2 overflow-y-auto max-h-96 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
             {lowStockProducts.length === 0 ? (
               <div className="py-8 text-center text-slate-500 text-xs">
                 {settings.language === 'ar'

@@ -110,11 +110,11 @@ export const ResetSafetyModal: React.FC<ResetSafetyModalProps> = ({
   return (
     <div
       id="reset-everything-modal-backdrop"
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150"
     >
       <div
         id="reset-everything-dialog"
-        className="bg-slate-900 border border-rose-600/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-slate-100 ring-1 ring-rose-500/20"
+        className="bg-slate-900 border border-rose-600/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-slate-100 ring-1 ring-rose-500/20 my-auto max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">

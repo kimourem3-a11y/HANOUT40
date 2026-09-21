@@ -157,12 +157,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         {/* Tab Switcher Pills */}
-        <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs w-full sm:w-auto">
+        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs w-full sm:w-auto overflow-x-auto scrollbar-none whitespace-nowrap">
           <button
             id="settings-tab-general"
             type="button"
             onClick={() => setActiveTab('general')}
-            className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-md font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`shrink-0 flex-1 sm:flex-initial px-3.5 py-1.5 rounded-md font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'general' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
             }`}
           >

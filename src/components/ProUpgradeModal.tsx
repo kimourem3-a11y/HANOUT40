@@ -63,14 +63,14 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
   return (
     <div
       id="pro-upgrade-modal-overlay"
-      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
     >
       <div
         id="pro-upgrade-modal-content"
-        className="bg-slate-900 border border-amber-500/40 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="bg-slate-900 border border-amber-500/40 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Modal Header Banner */}
-        <div className="bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-600/20 border-b border-amber-500/30 p-6 flex items-start justify-between">
+        <div className="bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-600/20 border-b border-amber-500/30 p-6 flex items-start justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded-xl shadow-inner">
               <Crown className="w-7 h-7" />
@@ -96,7 +96,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {/* Main notification message */}
           <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4">
             <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">

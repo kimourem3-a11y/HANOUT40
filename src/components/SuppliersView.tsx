@@ -181,8 +181,8 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
 
       {/* Add/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-white pb-2 border-b border-slate-800">
               {editingSupplier ? t.edit : 'Nouveau Fournisseur'}
             </h3>
@@ -250,8 +250,8 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
 
       {/* Payment Modal */}
       {payingSupplier && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-white pb-2 border-b border-slate-800">
               Règlement Dette Fournisseur
             </h3>

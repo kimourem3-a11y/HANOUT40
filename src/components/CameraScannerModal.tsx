@@ -126,11 +126,11 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
   return (
     <div
       id="camera-scanner-modal-backdrop"
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
     >
       <div
         id="camera-scanner-card"
-        className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl flex flex-col"
+        className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl flex flex-col my-auto max-h-[90vh] overflow-y-auto"
       >
         {/* Modal Header */}
         <div className="bg-slate-950 p-4 border-b border-slate-800 flex items-center justify-between">

@@ -773,10 +773,12 @@ export default function App() {
 
   const lowStockCount = products.filter((p) => p.stockQuantity <= p.minStock).length;
 
+  const isNativeAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+
   const appContent = (
     <div
       id="hanouti-app-root"
-      className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white"
+      className="min-h-full flex-1 w-full bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white"
       dir={settings.language === 'ar' ? 'rtl' : 'ltr'}
     >
       {/* Top Application Header */}
@@ -810,7 +812,7 @@ export default function App() {
       />
 
       {/* Main Workspace Content Area */}
-      <main id="hanouti-main-content" className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+      <main id="hanouti-main-content" className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 pb-20 sm:pb-8">
         {currentModule === 'dashboard' && (
           <DashboardView
             products={products}
@@ -1049,8 +1051,8 @@ export default function App() {
     </div>
   );
 
-  // If in Android Phone mode, wrap inside a smartphone frame with Android status bar
-  if (deviceViewMode === 'android_phone') {
+  // If in Android Phone mode and running on desktop preview, wrap inside a smartphone frame with Android status bar
+  if (deviceViewMode === 'android_phone' && !isNativeAndroid) {
     return (
       <div className="min-h-screen bg-slate-950 p-3 sm:p-6 flex flex-col items-center justify-center">
         {/* Android Device Switch Banner */}
@@ -1080,8 +1082,11 @@ export default function App() {
             </div>
           </div>
 
-          {/* Scrollable App Viewport */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-950">
+          {/* Scrollable App Viewport with hardware-accelerated touch swipe */}
+          <div
+            className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-950 overscroll-y-contain"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             {appContent}
           </div>
 

@@ -206,8 +206,8 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
 
       {/* New Purchase Modal */}
       {isNewPurchaseOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 sm:p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 sm:p-6 max-w-2xl w-full shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-white pb-2 border-b border-slate-800">
               Nouvelle Réception Marchandise (Entrée Stock)
             </h3>

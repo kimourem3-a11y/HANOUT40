@@ -72,14 +72,14 @@ export const PairingModal: React.FC<PairingModalProps> = ({
   return (
     <div
       id="sync-pairing-modal-overlay"
-      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
     >
       <div
         id="sync-pairing-modal-content"
-        className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950/50 border-b border-slate-800 p-5 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950/50 border-b border-slate-800 p-5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-xl">
               <QrCode className="w-6 h-6" />
@@ -130,7 +130,7 @@ export const PairingModal: React.FC<PairingModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {mode === 'SHOW_CODE' && session && (
             <div className="space-y-4 text-center">
               {/* SVG QR Code Simulation */}

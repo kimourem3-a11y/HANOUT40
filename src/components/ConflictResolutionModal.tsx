@@ -37,14 +37,14 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
   return (
     <div
       id="conflict-resolution-modal-overlay"
-      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
     >
       <div
         id="conflict-resolution-modal-content"
-        className="bg-slate-900 border border-amber-500/40 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="bg-slate-900 border border-amber-500/40 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Header */}
-        <div className="bg-amber-500/10 border-b border-amber-500/30 p-5 flex items-center justify-between">
+        <div className="bg-amber-500/10 border-b border-amber-500/30 p-5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded-xl">
               <AlertTriangle className="w-6 h-6" />
@@ -67,7 +67,7 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
         </div>
 
         {/* Content Comparison */}
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1">
           <p className="text-xs text-slate-300 leading-relaxed">
             Cet élément a été modifié simultanément sur cet appareil et sur un autre client connecté. Veuillez sélectionner la version à conserver dans la base de données centrale :
           </p>
