@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Store, Globe, ShoppingCart, ShieldCheck, Smartphone, Tablet, FileDown, Crown, Radio, RefreshCw, WifiOff } from 'lucide-react';
+import { Store, Globe, ShoppingCart, ShieldCheck, Smartphone, Tablet, FileDown, Crown, Radio, RefreshCw, WifiOff, Bell } from 'lucide-react';
 import { DeviceViewMode, Language, LicenseInfo, StoreSettings } from '../types';
 import { translations } from '../localization/translations';
 import { SyncEngine, SyncConnectionStatus } from '../utils/syncEngine';
@@ -8,6 +8,7 @@ interface HeaderProps {
   settings: StoreSettings;
   deviceViewMode: DeviceViewMode;
   licenseInfo?: LicenseInfo;
+  unreadNotificationsCount?: number;
   onLanguageChange: (lang: Language) => void;
   onToggleDeviceMode: (mode: DeviceViewMode) => void;
   onOpenPOS: () => void;
@@ -15,12 +16,14 @@ interface HeaderProps {
   onOpenForensics: () => void;
   onOpenLicense?: () => void;
   onOpenSync?: () => void;
+  onOpenNotifications?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   settings,
   deviceViewMode,
   licenseInfo,
+  unreadNotificationsCount = 0,
   onLanguageChange,
   onToggleDeviceMode,
   onOpenPOS,
@@ -28,6 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenForensics,
   onOpenLicense,
   onOpenSync,
+  onOpenNotifications,
 }) => {
   const t = translations[settings.language];
   const isRtl = settings.language === 'ar';
@@ -135,6 +139,22 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'Sync: Hors-ligne'
                 : 'Sync: Conflit'}
             </span>
+          </button>
+
+          {/* Real Notification Bell Button */}
+          <button
+            id="header-notifications-btn"
+            type="button"
+            onClick={onOpenNotifications}
+            className="relative bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 p-1.5 rounded-md transition cursor-pointer flex items-center justify-center"
+            title="Centre de Notifications & Alertes Stock"
+          >
+            <Bell className="w-4 h-4 text-emerald-400" />
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-mono shadow-xs animate-pulse">
+                {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+              </span>
+            )}
           </button>
 
           {/* Quick POS button */}

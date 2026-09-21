@@ -26,6 +26,7 @@ interface POSViewProps {
   customers: Customer[];
   settings: StoreSettings;
   onSaleComplete: (sale: Sale, updatedProducts: Product[], updatedCustomers: Customer[]) => void;
+  initialCustomerId?: number | null;
 }
 
 export const POSView: React.FC<POSViewProps> = ({
@@ -34,6 +35,7 @@ export const POSView: React.FC<POSViewProps> = ({
   customers,
   settings,
   onSaleComplete,
+  initialCustomerId,
 }) => {
   const t = translations[settings.language];
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +49,13 @@ export const POSView: React.FC<POSViewProps> = ({
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
   const [tvaRate, setTvaRate] = useState<number>(settings.taxRate ?? 0);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(initialCustomerId || null);
+
+  useEffect(() => {
+    if (initialCustomerId !== undefined && initialCustomerId !== null) {
+      setSelectedCustomerId(initialCustomerId);
+    }
+  }, [initialCustomerId]);
 
   // Checkout Modal State
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -425,7 +433,7 @@ export const POSView: React.FC<POSViewProps> = ({
                   className="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-emerald-500"
                 >
                   <option value="">{t.anonymousClient}</option>
-                  {customers.map((c) => (
+                  {customers.filter((c) => !c.isArchived).map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} {c.currentDebt > 0 ? `(Dette: ${formatCurrency(c.currentDebt, settings.currency)})` : ''}
                     </option>

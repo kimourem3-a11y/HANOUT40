@@ -37,3 +37,17 @@ export function generateBillNumber(): string {
   const rand = Math.floor(1000 + Math.random() * 9000);
   return `BL-${year}-${rand}`;
 }
+
+export function getLocalDateStr(d: Date = new Date()): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getLocalDateTimeStr(d: Date = new Date()): string {
+  const dateStr = getLocalDateStr(d);
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${dateStr} ${hours}:${minutes}`;
+}

@@ -14,6 +14,7 @@ import {
   TrendingUp,
   TrendingDown,
   FileDown,
+  Calendar,
 } from 'lucide-react';
 import { AppModule, Language } from '../types';
 import { translations } from '../localization/translations';
@@ -42,6 +43,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'dashboard', label: t.dashboard, icon: LayoutDashboard },
     { id: 'pos', label: t.posCashier, icon: ShoppingCart },
     { id: 'products', label: t.products, icon: Package },
+    { id: 'financial_calendar', label: `📅 ${t.financialCalendar || 'Calendrier Financier'}`, icon: Calendar },
     { id: 'purchases', label: t.purchases, icon: ShoppingBag },
     { id: 'income', label: t.income, icon: TrendingUp },
     { id: 'expenses', label: t.expenses, icon: TrendingDown },

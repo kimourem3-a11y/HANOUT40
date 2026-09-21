@@ -16,6 +16,7 @@ import {
   Calendar,
   Crown,
   Lock,
+  Smartphone,
 } from 'lucide-react';
 import {
   Customer,
@@ -325,6 +326,35 @@ export const ExportCenterView: React.FC<ExportCenterViewProps> = ({
             </span>
           )}
         </button>
+      </div>
+
+      {/* Android Native APK Package Download Card */}
+      <div className="bg-slate-900 border border-emerald-800/40 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-emerald-950 border border-emerald-700/60 rounded-xl text-emerald-400 shrink-0">
+            <Smartphone className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-bold text-white">Application Mobile Android (APK Réel Signé)</h3>
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-400 border border-emerald-700/40">
+                Package com.hanouti40.app
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Installez l'application Hanouti 40 directement sur votre smartphone ou tablette Android (Android 5.0 à 14+).
+            </p>
+          </div>
+        </div>
+
+        <a
+          href="/Hanouti40-release.apk"
+          download="Hanouti40-release.apk"
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-md shadow-emerald-950/40 cursor-pointer w-full sm:w-auto shrink-0"
+        >
+          <Download className="w-4 h-4" />
+          <span>Télécharger APK (4.85 Mo)</span>
+        </a>
       </div>
 
       {/* Success Notification Banner */}

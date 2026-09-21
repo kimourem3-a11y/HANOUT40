@@ -28,11 +28,43 @@ export interface Product {
 
 export interface Customer {
   id: number;
+  code?: string;
   name: string;
   phone: string;
+  email?: string;
   address: string;
+  cityWilaya?: string;
+  notes?: string;
   creditLimit: number;
+  initialBalance?: number;
   currentDebt: number;
+  isArchived?: boolean;
+  deletedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  createdByDevice?: string;
+  updatedByDevice?: string;
+  version?: number;
+  syncStatus?: 'SYNCED' | 'PENDING' | 'SYNCING';
+}
+
+export interface CustomerReturn {
+  id: string;
+  date: string;
+  customerId: number;
+  customerName: string;
+  saleId?: number;
+  invoiceNumber?: string;
+  amount: number;
+  reason?: string;
+  refundMethod: 'CASH' | 'CREDIT_REDUCTION';
+  items?: Array<{
+    productId: number;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+  }>;
 }
 
 export interface Supplier {
@@ -194,6 +226,7 @@ export type AppModule =
   | 'dashboard'
   | 'pos'
   | 'products'
+  | 'financial_calendar'
   | 'purchases'
   | 'customers'
   | 'suppliers'
@@ -206,6 +239,91 @@ export type AppModule =
   | 'exportCenter'
   | 'settings'
   | 'forensics';
+
+// Financial Calendar Types
+export type CalendarViewMode = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR';
+
+export type CalendarFilterType =
+  | 'ALL'
+  | 'SALES'
+  | 'INVOICES'
+  | 'CUSTOMER_PAYMENTS'
+  | 'EXPENSES'
+  | 'INCOME'
+  | 'PURCHASES'
+  | 'SUPPLIER_PAYMENTS'
+  | 'REFUNDS';
+
+export type CalendarDatePreset =
+  | 'TODAY'
+  | 'THIS_WEEK'
+  | 'THIS_MONTH'
+  | 'PREV_MONTH'
+  | 'THIS_YEAR'
+  | 'CUSTOM';
+
+export interface DailyFinancialSummary {
+  date: string; // YYYY-MM-DD
+  grossSales: number;
+  costOfGoodsSold: number;
+  grossProfit: number;
+  operatingExpenses: number;
+  otherIncome: number;
+  netProfit: number;
+  cashSales: number;
+  cashCustomerPayments: number;
+  otherCashIncome: number;
+  cashExpenses: number;
+  cashSupplierPayments: number;
+  netCashFlow: number;
+  invoicesCount: number;
+  paymentsCount: number;
+  expensesCount: number;
+  purchasesCount: number;
+  refundsCount: number;
+}
+
+export interface PeriodFinancialSummary {
+  startDate: string;
+  endDate: string;
+  grossSales: number;
+  costOfGoodsSold: number;
+  grossProfit: number;
+  operatingExpenses: number;
+  otherIncome: number;
+  netProfit: number;
+  totalReceived: number;
+  totalCashOutflow: number;
+  netCashFlow: number;
+  salesCount: number;
+  invoicesCount: number;
+  expensesCount: number;
+  purchasesCount: number;
+  paymentsCount: number;
+  returnsCount: number;
+}
+
+export interface FinancialEvent {
+  id: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  type: 'SALE' | 'CUSTOMER_PAYMENT' | 'SUPPLIER_PAYMENT' | 'PURCHASE' | 'EXPENSE' | 'INCOME' | 'RETURN';
+  title: string;
+  amount: number;
+  paymentMethod: string;
+  reference?: string;
+  partyName?: string;
+  category?: string;
+  profitContribution?: number;
+  rawEntity?: any;
+}
+
+export interface CashSessionRegister {
+  date: string;
+  openingCash: number;
+  actualClosingCash?: number;
+  notes?: string;
+}
 
 // License & Edition Types (FREE vs PRO)
 export type LicenseEdition = 'FREE' | 'PRO';
@@ -261,3 +379,67 @@ export interface ScannerHistoryItem {
   productName?: string;
   status: 'FOUND' | 'NOT_FOUND';
 }
+
+// Background Monitoring & Notification System Types
+export type ReminderFrequency = 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'CUSTOM';
+
+export type ReminderCategory = 'STOCK' | 'SUPPLIER' | 'PAYMENT' | 'INVENTORY' | 'GENERAL';
+
+export interface ScheduledReminder {
+  id: string;
+  title: string;
+  category: ReminderCategory;
+  frequency: ReminderFrequency;
+  scheduledTime: string; // ISO format or YYYY-MM-DDTHH:mm
+  notes?: string;
+  targetId?: number | string;
+  targetName?: string;
+  isActive: boolean;
+  lastTriggeredAt?: string | null;
+  createdAt: string;
+}
+
+export type NotificationChannelId = 'stock_alerts' | 'reminders';
+
+export interface AppNotification {
+  id: string;
+  channelId: NotificationChannelId;
+  title: string;
+  body: string;
+  timestamp: string;
+  read: boolean;
+  data?: {
+    type: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'REMINDER' | 'PAYMENT_DUE' | 'SUPPLIER_ORDER' | 'SYNC_EVENT';
+    productId?: number;
+    productName?: string;
+    currentStock?: number;
+    minStockAlert?: number;
+    supplierId?: number;
+    supplierName?: string;
+    reminderId?: string;
+  };
+}
+
+export interface BackgroundSettings {
+  enableBackgroundMonitoring: boolean;
+  enableLowStockAlerts: boolean;
+  defaultLowStockThreshold: number; // default 5
+  enableOutOfStockAlerts: boolean;
+  enableScheduledReminders: boolean;
+  enableBackgroundSync: boolean;
+  keepWindowsRunningInBackground: boolean;
+  soundEnabled: boolean;
+  vibrationEnabled: boolean;
+  badgeEnabled: boolean;
+}
+
+export interface BackgroundStatus {
+  isMonitoringActive: boolean;
+  notificationsPermission: 'granted' | 'denied' | 'default' | 'unsupported';
+  isSyncActive: boolean;
+  lastSyncTimestamp?: string;
+  pendingChangesCount: number;
+  batteryOptimization: 'ALLOWED' | 'RESTRICTED' | 'UNKNOWN';
+  platform: 'ANDROID' | 'WINDOWS' | 'WEB_PWA';
+}
+

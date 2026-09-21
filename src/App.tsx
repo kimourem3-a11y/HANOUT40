@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   AppModule,
   Customer,
+  CustomerPayment,
+  CustomerReturn,
   DeviceViewMode,
   Expense,
   Income,
@@ -31,6 +33,7 @@ import { POSView } from './components/POSView';
 import { ProductsView } from './components/ProductsView';
 import { PurchasesView } from './components/PurchasesView';
 import { CustomersView } from './components/CustomersView';
+import { FinancialCalendarView } from './components/FinancialCalendarView';
 import { SuppliersView } from './components/SuppliersView';
 import { InventoryView } from './components/InventoryView';
 import { DebtsView } from './components/DebtsView';
@@ -43,8 +46,11 @@ import { ExportCenterView } from './components/ExportCenterView';
 import { ResetSafetyModal } from './components/ResetSafetyModal';
 import { ReceiptModal } from './components/ReceiptModal';
 import { ProUpgradeModal } from './components/ProUpgradeModal';
+import { NotificationCenterDrawer } from './components/NotificationCenterDrawer';
 import { FeatureAccessManager, LicenseManager } from './utils/licenseManager';
 import { SyncEngine } from './utils/syncEngine';
+import { BackgroundMonitor } from './utils/backgroundMonitor';
+import { AppNotification } from './types';
 import { Wifi, BatteryMedium, Signal } from 'lucide-react';
 
 export default function App() {
@@ -104,6 +110,18 @@ export default function App() {
     return saved ? JSON.parse(saved) : initialExpenses;
   });
 
+  const [customerPayments, setCustomerPayments] = useState<CustomerPayment[]>(() => {
+    const saved = localStorage.getItem('hanouti40_customer_payments');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [customerReturns, setCustomerReturns] = useState<CustomerReturn[]>(() => {
+    const saved = localStorage.getItem('hanouti40_customer_returns');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [selectedSaleCustomerId, setSelectedSaleCustomerId] = useState<number | null>(null);
+
   // Device emulation mode: android_phone or android_tablet
   const [deviceViewMode, setDeviceViewMode] = useState<DeviceViewMode>(() => {
     const saved = localStorage.getItem('hanouti40_device_mode');
@@ -114,7 +132,13 @@ export default function App() {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   // Settings initial tab
-  const [settingsTab, setSettingsTab] = useState<'general' | 'data' | 'sync' | 'license'>('general');
+  const [settingsTab, setSettingsTab] = useState<'general' | 'data' | 'clients' | 'sync' | 'background' | 'license'>('general');
+
+  // Background Monitoring & Notifications State
+  const [notifications, setNotifications] = useState<AppNotification[]>(() =>
+    BackgroundMonitor.getStoredNotifications()
+  );
+  const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
 
   // Current active navigation module
   const [currentModule, setCurrentModule] = useState<AppModule>('dashboard');
@@ -256,6 +280,31 @@ export default function App() {
     return () => unsub();
   }, []);
 
+  // Background Monitoring & Real Notifications Initialization
+  useEffect(() => {
+    BackgroundMonitor.init();
+
+    const unsubNotifs = BackgroundMonitor.onNotificationsChange((list) => {
+      setNotifications(list);
+    });
+
+    const unsubActions = BackgroundMonitor.onActionClick((action, data) => {
+      if (action === 'VIEW_PRODUCT') {
+        setCurrentModule('products');
+      } else if (action === 'CREATE_PURCHASE') {
+        setCurrentModule('purchases');
+      }
+    });
+
+    // Check product stock on mount
+    BackgroundMonitor.evaluateProductStock(products, suppliers);
+
+    return () => {
+      unsubNotifs();
+      unsubActions();
+    };
+  }, []);
+
   // Handlers
   const handleLanguageChange = (lang: Language) => {
     setSettings((prev) => ({ ...prev, language: lang }));
@@ -294,6 +343,9 @@ export default function App() {
     setProducts(updatedProducts);
     setCustomers(updatedCustomers);
     setViewingReceiptSale(newSale);
+
+    // Immediate offline & online stock evaluation for low-stock and out-of-stock notifications
+    BackgroundMonitor.evaluateProductStock(updatedProducts, suppliers);
 
     // Sync broadcast
     SyncEngine.enqueueChange(
@@ -392,14 +444,71 @@ export default function App() {
     );
   };
 
-  const handleDeleteCustomer = (id: number) => {
-    setCustomers((prev) => prev.filter((c) => c.id !== id));
-    SyncEngine.enqueueChange('CUSTOMER', 'DELETE', String(id), { id }, `Client #${id} supprimé`);
+  const handleSoftDeleteCustomer = (id: number) => {
+    setCustomers((prev) => {
+      const updated = prev.map((c) =>
+        c.id === id ? { ...c, isArchived: true, deletedAt: new Date().toISOString() } : c
+      );
+      const target = updated.find((c) => c.id === id);
+      if (target) {
+        SyncEngine.enqueueChange(
+          'CUSTOMER',
+          'UPDATE',
+          String(id),
+          target,
+          `Client archivé : ${target.name} (historique comptable conservé)`
+        );
+      }
+      return updated;
+    });
   };
 
-  const handleReceiveCustomerPayment = (customerId: number, amount: number) => {
+  const handleRestoreCustomer = (id: number) => {
     setCustomers((prev) => {
-      const updated = prev.map((c) => (c.id === customerId ? { ...c, currentDebt: Math.max(0, c.currentDebt - amount) } : c));
+      const updated = prev.map((c) =>
+        c.id === id ? { ...c, isArchived: false, deletedAt: null } : c
+      );
+      const target = updated.find((c) => c.id === id);
+      if (target) {
+        SyncEngine.enqueueChange(
+          'CUSTOMER',
+          'UPDATE',
+          String(id),
+          target,
+          `Client restauré : ${target.name}`
+        );
+      }
+      return updated;
+    });
+  };
+
+  const handleReceiveCustomerPayment = (
+    customerId: number,
+    amount: number,
+    notes?: string,
+    method: string = 'CASH'
+  ) => {
+    const targetCustomer = customers.find((c) => c.id === customerId);
+    const paymentRecord: CustomerPayment = {
+      id: Date.now(),
+      customerId,
+      customerName: targetCustomer ? targetCustomer.name : `Client #${customerId}`,
+      paymentDate: new Date().toISOString(),
+      amount,
+      paymentMethod: method || 'CASH',
+      notes,
+    };
+
+    setCustomerPayments((prev) => {
+      const updated = [paymentRecord, ...prev];
+      localStorage.setItem('hanouti40_customer_payments', JSON.stringify(updated));
+      return updated;
+    });
+
+    setCustomers((prev) => {
+      const updated = prev.map((c) =>
+        c.id === customerId ? { ...c, currentDebt: Math.max(0, c.currentDebt - amount) } : c
+      );
       const target = updated.find((c) => c.id === customerId);
       if (target) {
         SyncEngine.enqueueChange(
@@ -412,6 +521,37 @@ export default function App() {
       }
       return updated;
     });
+  };
+
+  const handleRecordCustomerReturn = (ret: CustomerReturn) => {
+    setCustomerReturns((prev) => {
+      const updated = [ret, ...prev];
+      localStorage.setItem('hanouti40_customer_returns', JSON.stringify(updated));
+      return updated;
+    });
+
+    if (ret.refundMethod === 'CREDIT_REDUCTION') {
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.id === ret.customerId
+            ? { ...c, currentDebt: Math.max(0, c.currentDebt - ret.amount) }
+            : c
+        )
+      );
+    }
+
+    SyncEngine.enqueueChange(
+      'SALE',
+      'UPDATE',
+      ret.id,
+      ret,
+      `Retour client : ${ret.customerName} (${ret.amount} DZD)`
+    );
+  };
+
+  const handleStartSaleForCustomer = (cust: Customer) => {
+    setSelectedSaleCustomerId(cust.id);
+    setCurrentModule('pos');
   };
 
   const handleSaveSupplier = (supp: Supplier) => {
@@ -646,6 +786,7 @@ export default function App() {
         settings={settings}
         deviceViewMode={deviceViewMode}
         licenseInfo={licenseInfo}
+        unreadNotificationsCount={notifications.filter((n) => !n.read).length}
         onLanguageChange={handleLanguageChange}
         onToggleDeviceMode={setDeviceViewMode}
         onOpenPOS={() => setCurrentModule('pos')}
@@ -659,6 +800,7 @@ export default function App() {
           setSettingsTab('sync');
           setCurrentModule('settings');
         }}
+        onOpenNotifications={() => setIsNotificationDrawerOpen(true)}
       />
 
       {/* Module Navigation */}
@@ -692,6 +834,23 @@ export default function App() {
             customers={customers}
             settings={settings}
             onSaleComplete={handleSaleComplete}
+            initialCustomerId={selectedSaleCustomerId}
+          />
+        )}
+
+        {currentModule === 'financial_calendar' && (
+          <FinancialCalendarView
+            sales={sales}
+            purchases={purchases}
+            incomes={incomes}
+            expenses={expenses}
+            customers={customers}
+            suppliers={suppliers}
+            products={products}
+            settings={settings}
+            licenseInfo={licenseInfo}
+            onViewSale={setViewingReceiptSale}
+            onRequirePro={(feat) => handleOpenProModal(feat)}
           />
         )}
 
@@ -720,10 +879,16 @@ export default function App() {
         {currentModule === 'customers' && (
           <CustomersView
             customers={customers}
+            sales={sales}
+            customerPayments={customerPayments}
+            customerReturns={customerReturns}
             settings={settings}
             onSaveCustomer={handleSaveCustomer}
-            onDeleteCustomer={handleDeleteCustomer}
+            onSoftDeleteCustomer={handleSoftDeleteCustomer}
+            onRestoreCustomer={handleRestoreCustomer}
             onReceivePayment={handleReceiveCustomerPayment}
+            onRecordReturn={handleRecordCustomerReturn}
+            onStartSaleForCustomer={handleStartSaleForCustomer}
           />
         )}
 
@@ -803,6 +968,12 @@ export default function App() {
           <SettingsView
             settings={settings}
             licenseInfo={licenseInfo}
+            customers={customers}
+            products={products}
+            suppliers={suppliers}
+            onViewProduct={() => setCurrentModule('products')}
+            onCreatePurchase={() => setCurrentModule('purchases')}
+            onRestoreCustomer={handleRestoreCustomer}
             onSaveSettings={setSettings}
             onExportData={handleExportData}
             onImportData={handleImportData}
@@ -817,6 +988,19 @@ export default function App() {
           <ForensicsView settings={settings} />
         )}
       </main>
+
+      {/* Real Background Notification Center Drawer */}
+      <NotificationCenterDrawer
+        isOpen={isNotificationDrawerOpen}
+        onClose={() => setIsNotificationDrawerOpen(false)}
+        notifications={notifications}
+        onViewProduct={() => setCurrentModule('products')}
+        onCreatePurchase={() => setCurrentModule('purchases')}
+        onOpenBackgroundSettings={() => {
+          setSettingsTab('background');
+          setCurrentModule('settings');
+        }}
+      />
 
       {/* Footer bar */}
       <footer

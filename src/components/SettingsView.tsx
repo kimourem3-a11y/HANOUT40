@@ -24,27 +24,42 @@ import {
   EyeOff,
   Lock,
   Monitor,
+  Users,
 } from 'lucide-react';
-import { Currency, Language, LicenseInfo, PrinterType, StoreSettings } from '../types';
+import { Currency, Customer, Language, LicenseInfo, PrinterType, Product, StoreSettings, Supplier } from '../types';
 import { translations } from '../localization/translations';
 import { LicenseManager, maskLicenseKey } from '../utils/licenseManager';
 import { SyncView } from './SyncView';
+import { BackgroundSettingsSection } from './BackgroundSettingsSection';
+import { Bell } from 'lucide-react';
 
 interface SettingsViewProps {
   settings: StoreSettings;
   licenseInfo: LicenseInfo;
+  customers?: Customer[];
+  products?: Product[];
+  suppliers?: Supplier[];
+  onViewProduct?: (id: number) => void;
+  onCreatePurchase?: (id?: number) => void;
+  onRestoreCustomer?: (id: number) => void;
   onSaveSettings: (settings: StoreSettings) => void;
   onExportData: () => boolean;
   onImportData: (file: File) => void;
   onOpenResetModal: () => void;
   onActivateLicense: (key: string) => { success: boolean; message: string; license?: LicenseInfo };
   onDeactivateLicense: () => void;
-  initialTab?: 'general' | 'data' | 'sync' | 'license';
+  initialTab?: 'general' | 'data' | 'clients' | 'sync' | 'background' | 'license';
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
   licenseInfo,
+  customers = [],
+  products = [],
+  suppliers = [],
+  onViewProduct,
+  onCreatePurchase,
+  onRestoreCustomer,
   onSaveSettings,
   onExportData,
   onImportData,
@@ -56,7 +71,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const t = translations[settings.language];
 
   // Active Settings Sub-Tab
-  const [activeTab, setActiveTab] = useState<'general' | 'data' | 'sync' | 'license'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'general' | 'data' | 'clients' | 'sync' | 'background' | 'license'>(initialTab);
 
   // Local Form state
   const [storeName, setStoreName] = useState(settings.storeName);
@@ -168,6 +183,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
 
           <button
+            id="settings-tab-clients"
+            type="button"
+            onClick={() => setActiveTab('clients')}
+            className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-md font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === 'clients' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Clients & Archives</span>
+            {customers.filter((c) => c.isArchived).length > 0 && (
+              <span className="bg-amber-500 text-slate-950 font-bold text-[9px] px-1.5 py-0.2 rounded-full font-mono">
+                {customers.filter((c) => c.isArchived).length}
+              </span>
+            )}
+          </button>
+
+          <button
             id="settings-tab-sync"
             type="button"
             onClick={() => setActiveTab('sync')}
@@ -177,6 +209,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           >
             <Radio className="w-3.5 h-3.5" />
             <span>Synchronisation</span>
+          </button>
+
+          <button
+            id="settings-tab-background"
+            type="button"
+            onClick={() => setActiveTab('background')}
+            className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-md font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === 'background' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Bell className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Arrière-plan & Alertes</span>
           </button>
 
           <button
@@ -456,6 +500,54 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
 
+          {/* Real Android APK Package Card */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-950 border border-emerald-700/60 rounded-xl text-emerald-400 shrink-0">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>Application Android Native (Package APK Réel)</span>
+                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-400 border border-emerald-700/40">
+                      Signé & Prêt
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Package binaire natif compilé avec OpenJDK 17 JDK, aapt, dx et apksigner.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-950/60 border border-slate-800/80 rounded-lg p-3 text-xs space-y-1.5 text-slate-300">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Package ID:</span>
+                <span className="font-mono text-emerald-300 font-semibold">com.hanouti40.app</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Compatibilité:</span>
+                <span>Android 5.0 Lollipop à Android 14+ (SDK 21 - 33)</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Signature:</span>
+                <span className="text-emerald-400 font-medium">v1 (JAR) + v2 (Full APK) + v3 (Key Rotation)</span>
+              </div>
+            </div>
+
+            <div className="pt-1">
+              <a
+                href="/Hanouti40-release.apk"
+                download="Hanouti40-release.apk"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-5 rounded-xl text-xs shadow-md shadow-emerald-950/50 transition cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Télécharger le Fichier APK (Hanouti40-release.apk • 2.08 Mo)</span>
+              </a>
+            </div>
+          </div>
+
           {/* Destructive Section: RESET EVERYTHING (User Requirement) */}
           <div
             id="reset-everything-card"
@@ -508,6 +600,93 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       )}
 
       {/* ========================================================================= */}
+      {/* TAB: CLIENTS & ARCHIVES */}
+      {/* ========================================================================= */}
+      {activeTab === 'clients' && (
+        <div className="space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-indigo-400" />
+                  <span>Paramètres / Clients → Clients Archivés</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Les clients retirés conservent l'intégralité de leur historique financier. Vous pouvez les restaurer à tout moment.
+                </p>
+              </div>
+
+              <div className="text-right">
+                <span className="text-xs text-slate-400 block">Total clients archivés</span>
+                <span className="text-lg font-mono font-black text-amber-400">
+                  {customers.filter((c) => c.isArchived).length}
+                </span>
+              </div>
+            </div>
+
+            {customers.filter((c) => c.isArchived).length === 0 ? (
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-8 text-center text-slate-500 text-xs">
+                Aucun client dans les archives. Tous vos clients sont actuellement actifs.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-lg text-xs text-amber-300">
+                  <strong>Restauration :</strong> Restaurer un client le réintègre immédiatement dans la liste active avec le même identifiant, le même historique et le même solde de créance.
+                </div>
+
+                <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
+                  {customers
+                    .filter((c) => c.isArchived)
+                    .map((cust) => (
+                      <div
+                        key={cust.id}
+                        className="p-4 hover:bg-slate-900/60 transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">
+                              {cust.code || `CLIENT-${String(cust.id).slice(-4)}`}
+                            </span>
+                            <span className="font-bold text-white text-sm">{cust.name}</span>
+                            {cust.deletedAt && (
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                Archivé le {new Date(cust.deletedAt).toLocaleDateString('fr-FR')}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-slate-400 text-[11px]">
+                            {cust.phone && <span>Tél : {cust.phone}</span>}
+                            {cust.cityWilaya && <span>Ville : {cust.cityWilaya}</span>}
+                            {cust.currentDebt > 0 ? (
+                              <span className="text-rose-400 font-mono font-bold">
+                                Créance due : {cust.currentDebt.toLocaleString()} {settings.currency}
+                              </span>
+                            ) : (
+                              <span className="text-emerald-400 font-mono">Solde réglé</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {onRestoreCustomer && (
+                          <button
+                            type="button"
+                            onClick={() => onRestoreCustomer(cust.id)}
+                            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-black flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>RESTORE (Restaurer)</span>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
       {/* TAB 3: REAL-TIME SYNCHRONIZATION PC <-> ANDROID */}
       {/* ========================================================================= */}
       {activeTab === 'sync' && (
@@ -515,7 +694,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 4: HANOUTI 40 PRO → PRODUCTION CRYPTOGRAPHIC LICENSING */}
+      {/* TAB 4: BACKGROUND MONITORING & REAL NOTIFICATIONS */}
+      {/* ========================================================================= */}
+      {activeTab === 'background' && (
+        <BackgroundSettingsSection
+          products={products}
+          suppliers={suppliers}
+          onViewProduct={onViewProduct}
+          onCreatePurchase={onCreatePurchase}
+        />
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 5: HANOUTI 40 PRO → PRODUCTION CRYPTOGRAPHIC LICENSING */}
       {/* ========================================================================= */}
       {activeTab === 'license' && (
         <div className="space-y-6">

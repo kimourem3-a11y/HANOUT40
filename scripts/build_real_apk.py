@@ -220,23 +220,37 @@ def build_apk(project_dir):
     subprocess.run(cmd_aapt_r, check=True)
     print("  ✓ R.java generated successfully")
     
-    # Step 2: Compile Java sources with ecj
-    print("[2/6] Compiling Java source files with ecj...")
+    # Step 2: Compile Java sources with javac (JDK) or ecj
+    print("[2/6] Compiling Java source files with JDK javac...")
     java_files = list((project_dir / "src").rglob("*.java"))
-    cmd_ecj = [
-        "ecj",
-        "-proc:none",
-        "-1.7",
-        "-cp", str(android_jar),
-        "-d", str(project_dir / "bin" / "classes"),
-    ] + [str(f) for f in java_files]
-    subprocess.run(cmd_ecj, check=True)
-    print("  ✓ Java bytecode compiled (.class files)")
+    
+    javac_bin = shutil.which("javac")
+    if javac_bin:
+        cmd_compile = [
+            javac_bin,
+            "-source", "8",
+            "-target", "8",
+            "-cp", str(android_jar),
+            "-d", str(project_dir / "bin" / "classes"),
+        ] + [str(f) for f in java_files]
+        subprocess.run(cmd_compile, check=True)
+        print("  ✓ Java bytecode compiled with OpenJDK javac (.class files)")
+    else:
+        cmd_ecj = [
+            "ecj",
+            "-proc:none",
+            "-1.7",
+            "-cp", str(android_jar),
+            "-d", str(project_dir / "bin" / "classes"),
+        ] + [str(f) for f in java_files]
+        subprocess.run(cmd_ecj, check=True)
+        print("  ✓ Java bytecode compiled with ECJ (.class files)")
     
     # Step 3: Convert .class files to Dalvik classes.dex with dx
     print("[3/6] Compiling JVM bytecode to Dalvik executable (classes.dex) with dx...")
+    dx_bin = shutil.which("dx") or shutil.which("dalvik-exchange") or "dx"
     cmd_dx = [
-        "dx",
+        dx_bin,
         "--dex",
         f"--output={project_dir}/bin/classes.dex",
         f"{project_dir}/bin/classes"
@@ -306,7 +320,19 @@ def build_apk(project_dir):
     print("apksigner verification output:\n" + res.stdout.strip())
     
     size = out_release.stat().st_size
-    print(f"\n🎉 REAL NATIVE ANDROID APK CREATED: {out_release} ({size:,} bytes, {size / (1024*1024):.2f} MB)")
+    
+    # Copy to public web server directories for immediate in-browser download
+    for pub_target in [Path("public/Hanouti40-release.apk"), Path("public/downloads/Hanouti40-release.apk")]:
+        pub_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(out_release, pub_target)
+    
+    import hashlib
+    sha256 = hashlib.sha256(out_release.read_bytes()).hexdigest()
+    print(f"\n🎉 REAL NATIVE ANDROID APK CREATED: {out_release}")
+    print(f"  ✓ Size: {size:,} bytes ({size / (1024*1024):.2f} MB)")
+    print(f"  ✓ SHA256: {sha256}")
+    print(f"  ✓ Public Download Web Path: /Hanouti40-release.apk")
+    print(f"  ✓ Copied to: public/Hanouti40-release.apk & public/downloads/Hanouti40-release.apk")
     print("==================================================\n")
 
 if __name__ == '__main__':

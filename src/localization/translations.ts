@@ -100,6 +100,7 @@ export interface TranslationDict {
   netProfit: string;
   scanCamera: string;
   deviceMode: string;
+  financialCalendar: string;
 }
 
 export const translations: Record<Language, TranslationDict> = {
@@ -203,6 +204,7 @@ export const translations: Record<Language, TranslationDict> = {
     netProfit: 'صافي الربح الفعلي',
     scanCamera: 'مسح الباركود بالكاميرا',
     deviceMode: 'شاشة أندرويد',
+    financialCalendar: 'الرزنامة المالية',
   },
   fr: {
     appName: 'Hanouti 40',
@@ -304,6 +306,7 @@ export const translations: Record<Language, TranslationDict> = {
     netProfit: 'Bénéfice Net Réalisé',
     scanCamera: 'Scanner avec la caméra',
     deviceMode: 'Affichage Android',
+    financialCalendar: 'Calendrier Financier',
   },
   en: {
     appName: 'Hanouti 40',
@@ -405,5 +408,6 @@ export const translations: Record<Language, TranslationDict> = {
     netProfit: 'Net Income',
     scanCamera: 'Scan with Camera',
     deviceMode: 'Android Device View',
+    financialCalendar: 'Financial Calendar',
   }
 };
