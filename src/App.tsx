@@ -47,23 +47,27 @@ import { ResetSafetyModal } from './components/ResetSafetyModal';
 import { ReceiptModal } from './components/ReceiptModal';
 import { ProUpgradeModal } from './components/ProUpgradeModal';
 import { NotificationCenterDrawer } from './components/NotificationCenterDrawer';
-import { FeatureAccessManager, LicenseManager } from './utils/licenseManager';
+import { FeatureAccessManager, LicenseManager, DEFAULT_FREE_LICENSE } from './utils/licenseManager';
 import { SyncEngine } from './utils/syncEngine';
 import { BackgroundMonitor } from './utils/backgroundMonitor';
+import { safeGetJSON, safeGetString } from './utils/storage';
 import { AppNotification } from './types';
 import { Wifi, BatteryMedium, Signal } from 'lucide-react';
 
 export default function App() {
   // Persistent Settings
-  const [settings, setSettings] = useState<StoreSettings>(() => {
-    const saved = localStorage.getItem('hanouti40_settings');
-    return saved ? JSON.parse(saved) : initialSettings;
-  });
+  const [settings, setSettings] = useState<StoreSettings>(() =>
+    safeGetJSON('hanouti40_settings', initialSettings)
+  );
 
   // Dedicated PRO / FREE License System (Offline-first, Asymmetric Verification, Separate Storage)
-  const [licenseInfo, setLicenseInfo] = useState<LicenseInfo>(() =>
-    LicenseManager.getActiveLicense()
-  );
+  const [licenseInfo, setLicenseInfo] = useState<LicenseInfo>(() => {
+    try {
+      return LicenseManager.getActiveLicense();
+    } catch {
+      return DEFAULT_FREE_LICENSE;
+    }
+  });
 
   // Pro Upgrade / Gating Dialog state
   const [proModalState, setProModalState] = useState<{
@@ -73,60 +77,50 @@ export default function App() {
   }>({ isOpen: false });
 
   // Data Collections with LocalStorage Persistence
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('hanouti40_products');
-    return saved ? JSON.parse(saved) : initialProducts;
-  });
+  const [products, setProducts] = useState<Product[]>(() =>
+    safeGetJSON('hanouti40_products', initialProducts)
+  );
 
   const [categories] = useState(initialCategories);
 
-  const [customers, setCustomers] = useState<Customer[]>(() => {
-    const saved = localStorage.getItem('hanouti40_customers');
-    return saved ? JSON.parse(saved) : initialCustomers;
-  });
+  const [customers, setCustomers] = useState<Customer[]>(() =>
+    safeGetJSON('hanouti40_customers', initialCustomers)
+  );
 
-  const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
-    const saved = localStorage.getItem('hanouti40_suppliers');
-    return saved ? JSON.parse(saved) : initialSuppliers;
-  });
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() =>
+    safeGetJSON('hanouti40_suppliers', initialSuppliers)
+  );
 
-  const [sales, setSales] = useState<Sale[]>(() => {
-    const saved = localStorage.getItem('hanouti40_sales');
-    return saved ? JSON.parse(saved) : initialSales;
-  });
+  const [sales, setSales] = useState<Sale[]>(() =>
+    safeGetJSON('hanouti40_sales', initialSales)
+  );
 
-  const [purchases, setPurchases] = useState<Purchase[]>(() => {
-    const saved = localStorage.getItem('hanouti40_purchases');
-    return saved ? JSON.parse(saved) : initialPurchases;
-  });
+  const [purchases, setPurchases] = useState<Purchase[]>(() =>
+    safeGetJSON('hanouti40_purchases', initialPurchases)
+  );
 
-  const [incomes, setIncomes] = useState<Income[]>(() => {
-    const saved = localStorage.getItem('hanouti40_incomes');
-    return saved ? JSON.parse(saved) : initialIncomes;
-  });
+  const [incomes, setIncomes] = useState<Income[]>(() =>
+    safeGetJSON('hanouti40_incomes', initialIncomes)
+  );
 
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    const saved = localStorage.getItem('hanouti40_expenses');
-    return saved ? JSON.parse(saved) : initialExpenses;
-  });
+  const [expenses, setExpenses] = useState<Expense[]>(() =>
+    safeGetJSON('hanouti40_expenses', initialExpenses)
+  );
 
-  const [customerPayments, setCustomerPayments] = useState<CustomerPayment[]>(() => {
-    const saved = localStorage.getItem('hanouti40_customer_payments');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [customerPayments, setCustomerPayments] = useState<CustomerPayment[]>(() =>
+    safeGetJSON('hanouti40_customer_payments', [])
+  );
 
-  const [customerReturns, setCustomerReturns] = useState<CustomerReturn[]>(() => {
-    const saved = localStorage.getItem('hanouti40_customer_returns');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [customerReturns, setCustomerReturns] = useState<CustomerReturn[]>(() =>
+    safeGetJSON('hanouti40_customer_returns', [])
+  );
 
   const [selectedSaleCustomerId, setSelectedSaleCustomerId] = useState<number | null>(null);
 
   // Device emulation mode: android_phone or android_tablet
-  const [deviceViewMode, setDeviceViewMode] = useState<DeviceViewMode>(() => {
-    const saved = localStorage.getItem('hanouti40_device_mode');
-    return (saved as DeviceViewMode) || 'android_tablet';
-  });
+  const [deviceViewMode, setDeviceViewMode] = useState<DeviceViewMode>(() =>
+    (safeGetString('hanouti40_device_mode', 'android_tablet') as DeviceViewMode) || 'android_tablet'
+  );
 
   // Safe Multi-Stage Reset Modal State
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -135,9 +129,13 @@ export default function App() {
   const [settingsTab, setSettingsTab] = useState<'general' | 'data' | 'clients' | 'sync' | 'background' | 'license'>('general');
 
   // Background Monitoring & Notifications State
-  const [notifications, setNotifications] = useState<AppNotification[]>(() =>
-    BackgroundMonitor.getStoredNotifications()
-  );
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    try {
+      return BackgroundMonitor.getStoredNotifications();
+    } catch {
+      return [];
+    }
+  });
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
 
   // Current active navigation module

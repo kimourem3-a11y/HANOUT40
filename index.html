@@ -1,19 +1,110 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" href="/assets/app_icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+    <link rel="apple-touch-icon" href="./assets/app_icon.png" />
     <title>Hanouti 40 — Gestion de magasin</title>
     <meta name="description" content="Gestion de magasin - Point of Sale, Inventory, Debts & Retail Management System" />
     <meta property="og:title" content="Hanouti 40 — Gestion de magasin" />
     <meta property="og:description" content="Gestion de magasin - Point of Sale, Inventory, Debts & Retail Management System" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0f172a" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #0f172a;
+        color: #f8fafc;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+      }
+      #root {
+        height: 100%;
+        width: 100%;
+      }
+      @keyframes hanoutiSlide {
+        0% { left: -45%; width: 45%; }
+        50% { left: 30%; width: 70%; }
+        100% { left: 100%; width: 45%; }
+      }
+      @keyframes hanoutiPulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.85; transform: scale(0.98); }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Branded Native Preloader: Prevents blank white screen while WebView & React boot -->
+      <div id="hanouti-preloader" style="position:fixed;inset:0;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f8fafc;padding:24px;text-align:center;box-sizing:border-box;z-index:99999;">
+        <div style="width:68px;height:68px;border-radius:18px;background:linear-gradient(135deg, #10b981 0%, #059669 100%);display:flex;align-items:center;justify-content:center;margin-bottom:18px;box-shadow:0 12px 28px -6px rgba(16,185,129,0.35);animation:hanoutiPulse 2s infinite ease-in-out;">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+            <path d="M3 6h18"></path>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </div>
+        <h1 style="font-size:22px;font-weight:900;letter-spacing:1.5px;margin:0 0 4px;color:#ffffff;">HANOUTI 40</h1>
+        <p style="font-size:12px;color:#94a3b8;margin:0 0 24px;letter-spacing:0.4px;">Gestion de magasin & Point de Vente</p>
+        
+        <div style="width:200px;height:4px;background:#1e293b;border-radius:999px;overflow:hidden;position:relative;margin-bottom:14px;border:1px solid #334155;">
+          <div id="hanouti-loader-bar" style="position:absolute;top:0;left:0;height:100%;background:#10b981;border-radius:999px;animation:hanoutiSlide 1.5s infinite ease-in-out;"></div>
+        </div>
+        <p id="hanouti-loader-status" style="font-size:11px;color:#64748b;margin:0;font-family:monospace;">Chargement de l'espace de travail...</p>
+        
+        <!-- Diagnostic Error Box (shown only if JavaScript loading or bundle execution fails) -->
+        <div id="hanouti-error-panel" style="display:none;margin-top:20px;max-width:320px;background:#1e293b;border:1px solid #e11d48;border-radius:12px;padding:16px;text-align:center;">
+          <p style="color:#fb7185;font-size:13px;font-weight:bold;margin:0 0 6px;">Incident de démarrage</p>
+          <p id="hanouti-error-text" style="color:#94a3b8;font-size:11px;font-family:monospace;margin:0 0 14px;word-break:break-all;">Une erreur est survenue lors du chargement des modules.</p>
+          <div style="display:flex;gap:8px;justify-content:center;">
+            <button onclick="window.location.reload();" style="background:#10b981;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;">Réessayer</button>
+            <button onclick="try{localStorage.setItem('hanouti40_sync_sim_online','false');}catch(e){}window.location.reload();" style="background:#334155;color:#e2e8f0;border:none;padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer;">Continuer Hors-Ligne</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagnostic Global Error Catcher -->
+    <script>
+      (function() {
+        var steps = [
+          "Initialisation de la base de données locale...",
+          "Connexion aux services de stockage...",
+          "Préparation de l'espace de travail..."
+        ];
+        var currentStep = 0;
+        var stepInterval = setInterval(function() {
+          if (window.__HANOUTI_INITIALIZED__) {
+            clearInterval(stepInterval);
+            return;
+          }
+          currentStep = (currentStep + 1) % steps.length;
+          var statusElem = document.getElementById('hanouti-loader-status');
+          if (statusElem) statusElem.textContent = steps[currentStep];
+        }, 800);
+
+        window.addEventListener('error', function(e) {
+          if (!window.__HANOUTI_INITIALIZED__) {
+            clearInterval(stepInterval);
+            var errPanel = document.getElementById('hanouti-error-panel');
+            var errText = document.getElementById('hanouti-error-text');
+            var loaderBar = document.getElementById('hanouti-loader-bar');
+            var status = document.getElementById('hanouti-loader-status');
+            if (errPanel && errText) {
+              if (loaderBar) loaderBar.style.display = 'none';
+              if (status) status.style.display = 'none';
+              errText.textContent = e.message || 'Erreur inattendue de chargement';
+              errPanel.style.display = 'block';
+            }
+          }
+        });
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

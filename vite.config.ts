@@ -3,9 +3,20 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
+function stripCrossOriginPlugin() {
+  return {
+    name: 'strip-crossorigin',
+    transformIndexHtml(html: string) {
+      // Remove crossorigin attribute so file:/// protocol does not trigger CORS check failures in Android WebView
+      return html.replace(/\scrossorigin(=("[^"]*"|'[^']*'|[^\s>]+))?/g, '');
+    },
+  };
+}
+
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    base: './',
+    plugins: [react(), tailwindcss(), stripCrossOriginPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

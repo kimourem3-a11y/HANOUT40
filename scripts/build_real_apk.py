@@ -36,8 +36,41 @@ def prepare_android_project():
     assets_dir.mkdir(parents=True, exist_ok=True)
     
     # 1. Copy web application into assets
-    shutil.copytree("dist", assets_dir / "www")
+    shutil.copytree("dist", assets_dir / "www", ignore=shutil.ignore_patterns('*.apk', '*.map'))
     print("Copied web application into assets/www")
+    
+    # 1.1 Verify and sanitize assets/www/index.html for Android WebView
+    html_path = assets_dir / "www" / "index.html"
+    if not html_path.exists():
+        raise FileNotFoundError(f"Missing {html_path}! Run 'npm run build' first.")
+    
+    html_content = html_path.read_text(encoding="utf-8")
+    # Ensure relative paths for all assets so file:///android_asset/www/ loads properly
+    html_content = html_content.replace('href="/assets/', 'href="./assets/')
+    html_content = html_content.replace('src="/assets/', 'src="./assets/')
+    html_content = html_content.replace('href="/favicon', 'href="./favicon')
+    # Strip any remaining crossorigin attributes to prevent CORS blockage on file://
+    html_content = html_content.replace(' crossorigin=""', '')
+    html_content = html_content.replace(' crossorigin', '')
+    html_path.write_text(html_content, encoding="utf-8")
+    print("  ✓ Sanitized assets/www/index.html (relative paths & no crossorigin)")
+
+    # 1.2 Verify that all referenced JavaScript & CSS bundles physically exist
+    import re
+    scripts = re.findall(r'<script[^>]+src=["\']([^"\']+)["\']', html_content)
+    stylesheets = re.findall(r'<link[^>]+href=["\']([^"\']+)["\']', html_content)
+    print(f"Verifying {len(scripts)} scripts and {len(stylesheets)} stylesheets in assets/www...")
+    for ref in scripts + stylesheets:
+        clean = ref.split('?')[0].split('#')[0]
+        if clean.startswith('./'):
+            target = assets_dir / "www" / clean[2:]
+        elif clean.startswith('/'):
+            target = assets_dir / "www" / clean[1:]
+        else:
+            target = assets_dir / "www" / clean
+        if not target.exists():
+            raise FileNotFoundError(f"CRITICAL ASSET MISSING: {clean} -> {target}")
+        print(f"  ✓ Verified asset: {clean} ({target.stat().st_size:,} bytes)")
     
     # 2. Copy icons for all densities
     src_icon = Path("Hanouti40/assets/app_icon.png")
@@ -64,7 +97,7 @@ def prepare_android_project():
         shutil.copy2(out_ico, folder_path / "icon.png")
     print("Generated Android application icons for all mipmap densities")
     
-    # 3. Write strings.xml and styles.xml
+    # 3. Write strings.xml, colors.xml and styles.xml
     strings_xml = """<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Hanouti 40</string>
@@ -72,10 +105,17 @@ def prepare_android_project():
 """
     (res_dir / "values" / "strings.xml").write_text(strings_xml)
     
+    colors_xml = """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="window_background">#0f172a</color>
+</resources>
+"""
+    (res_dir / "values" / "colors.xml").write_text(colors_xml)
+
     styles_xml = """<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="@android:style/Theme.NoTitleBar.Fullscreen">
-        <item name="android:windowBackground">@null</item>
+        <item name="android:windowBackground">@color/window_background</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
     </style>
@@ -127,22 +167,31 @@ def prepare_android_project():
 """
     (project_dir / "AndroidManifest.xml").write_text(manifest_xml)
     
-    # 5. Write MainActivity.java with production WebView client & Chrome client
+    # 5. Write MainActivity.java with robust diagnostic WebView client & Chrome client
     main_activity_java = """package com.hanouti40.app;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Build;
 import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
 import android.webkit.PermissionRequest;
-import android.os.Build;
+import android.webkit.ConsoleMessage;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.net.http.SslError;
+import android.graphics.Bitmap;
+import android.util.Log;
 
 public class MainActivity extends Activity {
+    private static final String TAG = "Hanouti40";
     private WebView mWebView;
 
     @Override
@@ -154,6 +203,11 @@ public class MainActivity extends Activity {
                              WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         mWebView = new WebView(this);
+        mWebView.setLayoutParams(new ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        mWebView.setBackgroundColor(0xFF0F172A); // #0f172a theme canvas
         setContentView(mWebView);
 
         WebSettings settings = mWebView.getSettings();
@@ -166,14 +220,56 @@ public class MainActivity extends Activity {
         settings.setUseWideViewPort(true);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             settings.setAllowFileAccessFromFileURLs(true);
             settings.setAllowUniversalAccessFromFileURLs(true);
         }
 
-        mWebView.setWebViewClient(new WebViewClient());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
+
+        mWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                Log.i(TAG, "WebView onPageStarted: " + url);
+                super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                Log.i(TAG, "WebView onPageFinished: " + url);
+                super.onPageFinished(view, url);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                Log.e(TAG, "WebView onReceivedError: code=" + errorCode + " desc=" + description + " url=" + failingUrl);
+                super.onReceivedError(view, errorCode, description, failingUrl);
+            }
+
+            @Override
+            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                Log.e(TAG, "WebView onReceivedSslError: " + error.toString());
+                handler.proceed();
+            }
+        });
+
         mWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                Log.d("Hanouti40_JS", "[" + consoleMessage.messageLevel() + "] "
+                    + consoleMessage.message() + " -- Line " + consoleMessage.lineNumber()
+                    + " in " + consoleMessage.sourceId());
+                return true;
+            }
+
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
